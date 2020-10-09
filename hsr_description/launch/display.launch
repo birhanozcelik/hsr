@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- args -->
+    <arg name="gui" default="true" />
+    <arg name="robot" default="hsrb4s" />
+    <arg name="use_obj" default="false" />
+
+    <!-- startup simulated world -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <!-- <arg name="world_name" default="$(find riders_hector_worlds)/worlds/hoop_simple.world"/> -->
+        <!-- <arg name="paused" value="$(arg paused)"/> -->
+        <arg name="gui" value="false"/>
+    </include>
+    <rosparam file="$(find hsr_control)/config/hsr_robot_control.yaml" command="load"/>
+
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+    output="screen" ns="hsrb" 
+    args=
+    "joint1_position_controller 
+     joint2_position_controller
+     joint3_position_controller
+     joint4_position_controller
+     joint5_position_controller
+     joint6_position_controller
+     joint7_position_controller
+     joint8_position_controller
+     joint_state_controller"/>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"
+    respawn="false" output="screen">
+    <remap from="/joint_states" to="/hsrb/joint_states" />
+    </node>
+
+    <!-- load robot -->
+    <param name="robot_description" command="$(find xacro)/xacro '$(find hsr_description)/robots/$(arg robot).urdf.xacro' use_obj_for_visual:=$(arg use_obj)" />
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+    
+
+    <!-- load displays -->
+    <!-- <param name="use_gui" value="$(arg gui)"/> -->
+    <!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find hsr_description)/launch/display.rviz"/> -->
+
+    <!-- push robot_description to factory and spawn robot in gazebo -->
+    <node name="spawn_robot" pkg="gazebo_ros" type="spawn_model"
+        args="-param robot_description
+           -urdf
+           -x 0
+           -y 0
+           -z 0
+           -model $(arg robot)"
+        respawn="false" output="screen"/>
+
+</launch>
